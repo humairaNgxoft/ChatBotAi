@@ -14,7 +14,7 @@ const { initializeUser } = require("../middlewares/security");
 const { UserModel } = require("../models/user");
 const { PostModel } = require("../models/post");
 const { PostIssueModel } = require("../models/userIssuePost")
-const {ChatCommentsModel} = require("../models/chatComments")
+const { ChatCommentsModel } = require("../models/chatComments")
 
 
 
@@ -121,6 +121,9 @@ router.put("/posts/:id",
     }
   })
 
+
+
+
 router.get("/all-posts", async (req, res, next) => {
   try {
     PostModel.find({}, (err, items) => {
@@ -137,17 +140,19 @@ router.get("/all-posts", async (req, res, next) => {
 
 router.get("/all-discussion-posts", async (req, res, next) => {
   try {
-    PostIssueModel.find({}, (err, items) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.send(items);
-      }
+    const posts = await PostIssueModel.find({ ...req.query })
+      .populate("user")
+      .exec();
+
+    res.status(200).json({
+      success: true,
+      posts,
     });
   } catch (error) {
     next(error);
   }
 });
+
 // router.get("/discussion-comments/:id", async (req, res, next) => {
 //   req
 //   try {
@@ -160,14 +165,15 @@ router.get("/all-discussion-posts", async (req, res, next) => {
 //   }
 // });
 router.get("/discussion-comments", async (req, res, next) => {
-  console.log(req,"kkkkk")
+  console.log(req, "kkkkk")
   try {
-    ChatCommentsModel.find({}, (err, items) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.send(items);
-      }
+    const comments = await ChatCommentsModel.find({ ...req.query })
+      .populate("user")
+      .exec();
+
+    res.status(200).json({
+      success: true,
+      comments,
     });
   } catch (error) {
     next(error);
@@ -259,6 +265,33 @@ router.post("/signup",
       next(error);
     }
   });
+
+
+router.put("/forgot-password",
+  async (req, res, next) => {
+    const { email, pass } = req.body;
+
+    try {
+      const user = await UserModel.findOne({ email }).exec();
+      // const {password} = user
+      if (!user) throw new CustomError(404, "user doesnot exists");
+
+      console.log('password to change', req.body.password);
+
+
+      // user.password = pass;
+
+      console.log('password changed:', req.body.password);
+
+      res.status(200).json({ success: true, pass });
+      console.log(user)
+    } catch (error) {
+      next(error);
+    }
+
+  })
+
+
 
 // verify token
 router.post("/verifyuser/:token", async (req, res, next) => {

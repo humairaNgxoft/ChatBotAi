@@ -16,6 +16,7 @@ const UserSchema = new Schema({
  
   role: String,
   // contactno:String,
+  resetLink: { type: String, default: "" },
 });
 
 const UserModel = model("user", UserSchema);
